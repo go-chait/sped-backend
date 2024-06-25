@@ -6,6 +6,7 @@ from routes.auth import auth_routers
 from routes.sessions import sessions_router
 from routes.users import users_router
 from routes.chat import chat_router
+from routes.data import data_router
 
 app = FastAPI()
 
@@ -33,6 +34,9 @@ app.include_router(auth_routers, tags=["Auth"])
 app.include_router(users_router, prefix="/users", tags=["User"])
 
 app.include_router(sessions_router, prefix="/session", tags=["Session"])
+
+app.include_router(data_router, prefix="/data", tags=["Data"])
+
 
 app.include_router(chat_router, prefix="/chat-query", tags=["Chat"])
 

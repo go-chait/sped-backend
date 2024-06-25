@@ -33,6 +33,7 @@ async def create_user(request: Signup):
                 "userName": request.userName,
                 "email": request.email,
                 "password": get_hashed_password(request.password),
+                "role": "user"
             }
             user_data = Users.insert_one(user_data)
             insert_id = str(user_data.inserted_id)
