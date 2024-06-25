@@ -53,3 +53,5 @@ tenacity==8.3.0
 typing_extensions==4.11.0rc1
 uvicorn==0.30.1
 xlrd==2.0.1
+langchain==0.2.5
+langchain_openai==0.1.9
