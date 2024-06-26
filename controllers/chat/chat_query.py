@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi_versioning import version
 from fastapi.responses import JSONResponse
 from services.chat_service import handle_chat_query
+import faiss
+import numpy as np
 
 
 router = APIRouter()
@@ -29,3 +31,31 @@ async def chat_query(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": str(error)},
         )
+    
+
+
+class VectorSearchTool:
+    def __init__(self, dimension, index_type='FlatL2'):
+        self.dimension = dimension
+
+        self.index = faiss.index_factory(dimension, index_type)
+
+        def add_vectors(self, vectors):
+            # Convert vectors to float32 (required by FAISS)
+            vectors = vectors.astype('float32')
+        
+            # Add vectors to the index
+            self.index.add(vectors)
+
+        def search_vectors(self, query_vector, k=5):
+        
+            # Ensure query_vector is of the correct type and shape
+            query_vector = np.array(query_vector).astype('float32').reshape(1, -1)
+        
+            # Perform search
+            distances, indices = self.index.search(query_vector, k)
+        
+            return distances[0], indices[0]
+        
+
+        
