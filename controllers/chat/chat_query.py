@@ -31,6 +31,3 @@ async def chat_query(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": str(error)},
         )
-    
-
-
