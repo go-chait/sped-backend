@@ -6,6 +6,7 @@ from routes.auth import auth_routers
 from routes.sessions import sessions_router
 from routes.users import users_router
 from routes.chat import chat_router
+from routes.scrape import webscrape_router,pdfscrape_router
 
 app = FastAPI()
 
@@ -35,6 +36,10 @@ app.include_router(users_router, prefix="/users", tags=["User"])
 app.include_router(sessions_router, prefix="/session", tags=["Session"])
 
 app.include_router(chat_router, prefix="/chat-query", tags=["Chat"])
+
+app.include_router(pdfscrape_router, prefix="/pdfscrape-query", tags=["PDF Scrape"])
+
+app.include_router(webscrape_router, prefix="/webscrape-query", tags="Web Scrape")
 
 if __name__ == "__main__":
     import uvicorn

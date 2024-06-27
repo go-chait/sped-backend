@@ -2,7 +2,11 @@ from fastapi import APIRouter
 
 from controllers.scrape import scrape_query
 
-chat_router = APIRouter()
+pdfscrape_router = APIRouter()
+webscrape_router = APIRouter()
+retrievedata_router = APIRouter()
+# pdf scrape router
+pdfscrape_router.include_router(scrape_query.upload_file.router)
 
-# scrape router
-chat_router.include_router(scrape_query.router)
+# Web scrape router
+webscrape_router.include_router(scrape_query.scrape_website.router)
