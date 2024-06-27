@@ -337,6 +337,51 @@
             "response": []
           }
         ]
+      },
+      {
+        "name": "Data",
+        "item": [
+          {
+            "name": "Add Data",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [""],
+                  "type": "text/javascript",
+                  "packages": {}
+                }
+              },
+              {
+                "listen": "prerequest",
+                "script": {
+                  "exec": [""],
+                  "type": "text/javascript",
+                  "packages": {}
+                }
+              }
+            ],
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"name\": \"{{name}}\",\n \"type\": \"{{type}}\", \n \"link\": \"{{link}}\", \n \"status\":\"{{status}}\"}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "{{base_url}}/data/addData",
+                "host": ["{{base_url}}"],
+                "path": ["data", "addData"]
+              }
+            },
+            "response": []
+          }
+        ]
       }
     ]
   }
