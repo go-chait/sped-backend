@@ -6,6 +6,7 @@ from models.data import DataObj
 from bson import ObjectId
 import datetime
 
+
 router = APIRouter()
 
 @router.post("/addData")
