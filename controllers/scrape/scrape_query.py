@@ -1,24 +1,23 @@
-from glob import glob
-import requests
 import os
 import getpass
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, status
 from fastapi.responses import JSONResponse
-from langchain.document_loaders import PyPDFLoader,WebBaseLoader
-from langchain.vectorstores import FAISS
-from langchain import OpenAIEmbeddings
+from langchain_community.document_loaders import PyPDFLoader,WebBaseLoader
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings, OpenAI
 from langchain_text_splitters import CharacterTextSplitter
+from services import scrape_service
 
 router = APIRouter()
 os.environ['OPENAI_API_KEY'] = getpass.getpass('OpenAI API Key:')
+llm = OpenAI(model="gpt-3.5-turbo", temperature=0)
 db = None
-vectors_folder = "./vectors" 
 
 def load_vectors():
     global db
     try:
-        if os.path.exists(vectors_folder):
-            db = FAISS.load_local(vectors_folder)
+        if os.path.exists(llm["path"]):
+            db = FAISS.load_local(llm["path", llm["embeddings"]])
     except Exception as e:
         print(f"Failed to load vectors: {e}")
 
@@ -40,14 +39,20 @@ async def upload_file(file: UploadFile = File(...)):
             db = FAISS.from_documents(docs, embeddings)
         else:
             db.add_documents(docs, embeddings)
-        db.save_local("vectors_folder")
-        results = []
-        retriever = db.as_retriever()
-        results = retriever.invoke()
+        if os.path.exists(llm["path"]) and os.path.isfile(f"{llm['path']}/vectors"): 
+            old_db = FAISS.load_local( llm["path"], llm["embeddings"], allow_dangerous_deserialization=True)
+            db.merge_from(old_db)
+        db.save_local(llm["path"])
         os.remove(file_location)
-        return JSONResponse(content={"detail": "PDF uploaded and processed successfully."})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        result = await scrape_service.summarize()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"status": "success", "result": result},)
+    except Exception as error:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": str(error)},
+        )
 
 @router.post("/scrape/")
 async def scrape_website(url: str):
@@ -62,12 +67,16 @@ async def scrape_website(url: str):
             db = FAISS.from_documents(docs, embeddings)
         else:
             db.add_documents(docs, embeddings)
-        db.save_local(vectors_folder)
-        results = []
-        retriever = db.as_retriever()
-        results = retriever.invoke()
-        return JSONResponse(content={"detail": "Website scraped and processed successfully."})
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        if os.path.exists(llm["path"]) and os.path.isfile(f"{llm['path']}/vectors"): 
+            old_db = FAISS.load_local( llm["path"], llm["embeddings"], allow_dangerous_deserialization=True)
+            db.merge_from(old_db)
+        db.save_local(llm["path"])
+        result = await scrape_service.summarize()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"status": "success", "result": result},)
+    except Exception as error:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": str(error)},
+        )
