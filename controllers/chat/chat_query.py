@@ -2,8 +2,6 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi_versioning import version
 from fastapi.responses import JSONResponse
 from services.chat_service import handle_chat_query
-import faiss
-import numpy as np
 
 
 router = APIRouter()
