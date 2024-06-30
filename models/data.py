@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import List
 from pydantic import BaseModel
 from enum import Enum
 
@@ -17,3 +19,15 @@ class DataObj(BaseModel):
     type:DocType
     link:str
     status:StatusType
+
+
+class OutputDataObj(BaseModel):
+    created_date:datetime
+    status:str
+    link:str
+    name:str
+    type:str
+
+
+class ListOutputDataObj(BaseModel):
+    collection:List[OutputDataObj] = []

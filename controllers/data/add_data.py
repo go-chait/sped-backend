@@ -1,11 +1,14 @@
-from fastapi import APIRouter, status
+import json
+from typing import Any, Dict, List
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_versioning import version
+from pydantic import BaseModel
 from db.mongodb import Data
-from models.data import DataObj
+from models.data import DataObj, ListOutputDataObj
 from bson import ObjectId
 import datetime
-
+from bson.json_util import dumps
 
 router = APIRouter()
 
@@ -78,3 +81,34 @@ async def add(request: DataObj):
             status_code=code,
             content={"error": f"{message}"},
         )
+ 
+
+@router.get("/getAllData")
+@version(1)
+async def get_all_data():
+    try:
+        data_collection = Data.find({})
+        list_cursor = list(data_collection)
+        json_data = dumps(list_cursor)
+        ListOutputDataObj = json.loads(json_data)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "response": ListOutputDataObj
+            },
+        )   
+        
+    except Exception as error:
+        code = (
+            error.status_code
+            if hasattr(error, "status_code")
+            else status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+        message = error.content if hasattr(error, "content") else str(error)
+
+        return JSONResponse(
+            status_code=code,
+            content={"error": f"{message}"},
+        )
+        
