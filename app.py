@@ -8,6 +8,8 @@ from routes.users import users_router
 from routes.conversation import chat_router
 from routes.scrape import scrape_router
 from routes.data import data_router
+from routes.conversation import chat_router
+from routes.scrape import scrape_router
 
 app = FastAPI()
 
