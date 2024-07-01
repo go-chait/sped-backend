@@ -17,3 +17,4 @@ print("Connected to MongoDB...")
 Users = db.users
 Sessions = db.session
 Data = db.data
+Conversation = db.conversation
