@@ -28,7 +28,9 @@ def require_auth(authorization: str = Header(None)):
         # Check token expiration
         if "exp" in decoded_token:
             current_time = datetime.utcnow().timestamp()
-            if current_time > decoded_token["exp"]:
+            current_local_time = datetime.now().timestamp()
+
+            if current_local_time > decoded_token["exp"]:
                 raise BuildError(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     content="The token has expired. Please login in again",
