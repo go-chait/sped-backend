@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 from langchain.document_loaders import PyPDFLoader  
 from langchain.document_loaders import WebBaseLoader
 from services import vector_store
+from controllers.data import add_data
+from models.data import DataObj
 
 router = APIRouter()
 os.environ['OPENAI_API_KEY'] = getpass.getpass('OpenAI API Key:')
@@ -25,15 +27,22 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/scrape/")
-async def scrape_website(url: str):
+#async def scrape_website(url: str):
+async def scrape_website(request:DataObj):
     try:
-        response = requests.get(url)
+        data_dict = request.dict()
+        #response = requests.get(url)
+        response = requests.get(data_dict["link"])
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail="Failed to retrieve the URL")
         
         url = WebBaseLoader(response.content, "html.parser")
         text = url.load(separator=' ', strip=True)
         vector_store.add_to_index(text)
-        return JSONResponse(content={"text": text})
+
+        if(text is not None):
+            call_add_api = add_data.add(DataObj)
+
+        return JSONResponse(content={"text": text, "id": call_add_api})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
