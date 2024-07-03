@@ -5,8 +5,6 @@ from fastapi_versioning import VersionedFastAPI, version
 from routes.auth import auth_routers
 from routes.sessions import sessions_router
 from routes.users import users_router
-from routes.conversation import chat_router
-from routes.scrape import scrape_router
 from routes.data import data_router
 from routes.conversation import chat_router
 from routes.scrape import scrape_router
