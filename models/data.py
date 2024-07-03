@@ -16,17 +16,17 @@ class StatusType(Enum):
 
 class DataObj(BaseModel):
     name:str
+    userId:str
     type:DocType
-    link:str
     status:StatusType
 
 
 class OutputDataObj(BaseModel):
     created_date:datetime
-    status:str
-    link:str
     name:str
+    userId:str
     type:str
+    status:str
 
 
 class ListOutputDataObj(BaseModel):

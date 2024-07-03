@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
-from controllers.scrape import scrape_query
+from controllers.scrape import scrape_website, upload_file
 
-chat_router = APIRouter()
+scrape_router = APIRouter()
 
 # scrape router
-chat_router.include_router(scrape_query.router)
+scrape_router.include_router(scrape_website.router)
+scrape_router.include_router(upload_file.router)
