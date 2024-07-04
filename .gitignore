@@ -10,3 +10,4 @@ controllers/sessions/__pycache__
 controllers/users/__pycache__
 core/security/__pycache__
 utils/__pycache__
+controllers/conversation/__pycache__

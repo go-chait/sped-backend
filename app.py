@@ -38,7 +38,6 @@ app.include_router(sessions_router, prefix="/session", tags=["Session"])
 
 app.include_router(data_router, prefix="/data", tags=["Data"])
 
-
 app.include_router(chat_router, prefix="/chat-query", tags=["Chat"])
 
 app.include_router(scrape_router, prefix="/scrape", tags=["Scrape"])
