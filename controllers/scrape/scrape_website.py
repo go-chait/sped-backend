@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 from langchain_community.vectorstores import FAISS
@@ -11,6 +11,7 @@ from controllers.data import add_data
 
 class ScrapeRequest(BaseModel):
     url: str
+    uploadedUserId: str
 
 
 
@@ -47,9 +48,9 @@ async def scrape_website(request: ScrapeRequest):
 
         if results is not None:
             request_obj = {
-                "name": results[0],
+                "name": url,
+                "uploadedUserId": request.uploadedUserId,
                 "type": 1, #as it is link
-                "link": results[0],
                 "status": 3 #as scraping is done
             }
 
@@ -65,13 +66,16 @@ async def scrape_website(request: ScrapeRequest):
 # API that accepts either a json object or a PDF file and inserts into data collection
 @router.post("/scrape_and_insert")
 
-async def scrape(request: Request, file: UploadFile = File(default= None)):
+async def scrape(request: Request, file: UploadFile = File(default= None), userId: str = Form(default=None)):
     #<editor-fold desc="PDF">
     #If the user uploaded PDF file
     if file is not None:
         if not file.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="File is not a PDF")
         try:
+            if userId is not None:
+                uploadedUserId = userId
+                print("user", userId)
             global db
             file_location = f"temp_{file.filename}"
             with open(file_location, "wb") as f:
@@ -95,6 +99,7 @@ async def scrape(request: Request, file: UploadFile = File(default= None)):
             if num_documents is not None and sample_content is not None:
                 request_obj = {
                     "name": file.filename,
+                    "uploadedUserId": uploadedUserId,
                     "type": 2, #as it is PDF
                     "status": 3 #as scraping is done
                 }
@@ -146,6 +151,7 @@ async def scrape(request: Request, file: UploadFile = File(default= None)):
                 if results is not None:
                     request_obj = {
                         "name": url,
+                        "uploadedUserId":parsed_json.uploadedUserId,
                         "type": 1, #as it is link
                         "status": 3 #as scraping is done
                     }

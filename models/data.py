@@ -16,7 +16,7 @@ class StatusType(Enum):
 
 class DataObj(BaseModel):
     name:str
-    userId:str
+    uploadedUserId:str
     type:DocType
     status:StatusType
 
@@ -24,7 +24,7 @@ class DataObj(BaseModel):
 class OutputDataObj(BaseModel):
     created_date:datetime
     name:str
-    userId:str
+    uploadedUserId:str
     type:str
     status:str
 
