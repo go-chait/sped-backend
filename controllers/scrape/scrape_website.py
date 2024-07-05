@@ -13,7 +13,7 @@ class ScrapeRequest(BaseModel):
 
 router = APIRouter()
 db = None
-vectors_folder = "faiss_vectors"
+vectors_folder = "sped_vectors"
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 @router.post("/link")
