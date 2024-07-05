@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 from langchain_community.vectorstores import FAISS
@@ -8,75 +8,62 @@ from langchain.text_splitter import CharacterTextSplitter
 import os
 import logging
 from controllers.data import add_data
+from services.auth import get_current_user_id
 
 class ScrapeRequest(BaseModel):
     url: str
-    uploadedUserId: str
-
 
 
 router = APIRouter()
 db = None
-vectors_folder = "faiss_vectors"
+sped_db = None
+sped_vectors_folder = "sped_vectors"
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-@router.post("/link")
-async def scrape_website(request: ScrapeRequest):
-    global db
-    try:
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise HTTPException(status_code=500, detail="OpenAI API key not set")
+# @router.post("/link")
+# async def scrape_website(request: ScrapeRequest):
+#     global db
+#     try:
+#         openai_api_key = os.getenv("OPENAI_API_KEY")
+#         if not openai_api_key:
+#             raise HTTPException(status_code=500, detail="OpenAI API key not set")
 
-        url = request.url
-        loader = WebBaseLoader(url)
-        documents = loader.load()
+#         url = request.url
+#         loader = WebBaseLoader(url)
+#         documents = loader.load()
 
-        text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=0)
-        docs = text_splitter.split_documents(documents)
+#         text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=0)
+#         docs = text_splitter.split_documents(documents)
 
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-        if db is None:
-            db = await FAISS.afrom_documents(docs, embeddings)
-        else:
-            db.add_documents(docs, embeddings)
-            logging.info("Added documents to existing FAISS index")
+#         embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+#         if db is None:
+#             db = await FAISS.afrom_documents(docs, embeddings)
+#         else:
+#             db.add_documents(docs, embeddings)
+#             logging.info("Added documents to existing FAISS index")
 
-        db.save_local(vectors_folder)
+#         db.save_local(sped_vectors_folder)
 
-        results = [doc.page_content for doc in docs[:5]]  
+#         results = [doc.page_content for doc in docs[:5]]  
 
-        if results is not None:
-            request_obj = {
-                "name": url,
-                "uploadedUserId": request.uploadedUserId,
-                "type": 1, #as it is link
-                "status": 3 #as scraping is done
-            }
-
-            inserted_id = await add_data.add_sped_data(request_obj) #calling the api to insert the record in the DB
-            
-        return JSONResponse(content={"detail": "Record inserted successfully.", "id": inserted_id})
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+#         return JSONResponse(content={"detail": "Website scraped and processed successfully.", "results": results})
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
     
 
 
 # API that accepts either a json object or a PDF file and inserts into data collection
-@router.post("/scrape_and_insert")
-
-async def scrape(request: Request, file: UploadFile = File(default= None), userId: str = Form(default=None)):
+@router.post("/sped_scrape_and_insert")
+async def scrape(request: Request, file: UploadFile = File(default= None), user_id: str = Depends(get_current_user_id)):
     #<editor-fold desc="PDF">
     #If the user uploaded PDF file
     if file is not None:
         if not file.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="File is not a PDF")
         try:
-            if userId is not None:
-                uploadedUserId = userId
-                print("user", userId)
-            global db
+            if user_id is not None:
+                uploadedUserId = user_id
+            global sped_db
             file_location = f"temp_{file.filename}"
             with open(file_location, "wb") as f:
                 f.write(await file.read())
@@ -85,12 +72,12 @@ async def scrape(request: Request, file: UploadFile = File(default= None), userI
             pages = loader.load_and_split()
             
             embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
-            if db is None:
-                db = await FAISS.afrom_documents(pages, embeddings)
+            if sped_db is None:
+                sped_db = await FAISS.afrom_documents(pages, embeddings)
             else:
-                db.add_documents(pages, embeddings)
+                sped_db.add_documents(pages, embeddings)
             
-            db.save_local(vectors_folder)
+            sped_db.save_local(sped_vectors_folder)
             os.remove(file_location)
 
             num_documents = len(pages)
@@ -106,10 +93,8 @@ async def scrape(request: Request, file: UploadFile = File(default= None), userI
 
                 inserted_id = await add_data.add_sped_data(request_obj) #calling the api to insert the record in the DB
                 
-            # return JSONResponse(content={"detail": "PDF uploaded and processed successfully.", "id": inserted_id})
-
             return JSONResponse(content={
-                "detail": "PDF uploaded and processed successfully.",
+                "detail": "SPED PDF uploaded and processed successfully.",
                 "num_documents": num_documents,
                 "sample_content": sample_content,
                 "inserted_record_id": inserted_id
@@ -131,6 +116,9 @@ async def scrape(request: Request, file: UploadFile = File(default= None), userI
                     raise HTTPException(status_code=500, detail="OpenAI API key not set")
 
                 url = parsed_json.url
+                if user_id is not None:
+                    uploadedUserId = user_id
+                    
                 loader = WebBaseLoader(url)
                 documents = loader.load()
 
@@ -138,20 +126,22 @@ async def scrape(request: Request, file: UploadFile = File(default= None), userI
                 docs = text_splitter.split_documents(documents)
 
                 embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-                if db is None:
-                    db = await FAISS.afrom_documents(docs, embeddings)
+                print("embeddings done", embeddings)
+                if sped_db is None:
+                    sped_db = await FAISS.afrom_documents(docs, embeddings)
                 else:
-                    db.add_documents(docs, embeddings)
+                    sped_db.add_documents(docs, embeddings)
                     logging.info("Added documents to existing FAISS index")
 
-                db.save_local(vectors_folder)
+                print("saving add_doc is done", docs)
+                sped_db.save_local(sped_vectors_folder)
 
                 results = [doc.page_content for doc in docs[:5]]  
 
                 if results is not None:
                     request_obj = {
                         "name": url,
-                        "uploadedUserId":parsed_json.uploadedUserId,
+                        "uploadedUserId":uploadedUserId,
                         "type": 1, #as it is link
                         "status": 3 #as scraping is done
                     }
@@ -159,7 +149,7 @@ async def scrape(request: Request, file: UploadFile = File(default= None), userI
                     inserted_id = await add_data.add_sped_data(request_obj) #calling the api to insert the record in the DB
                     
                 return JSONResponse(content={
-                    "detail": "Website scraped and processed successfully.", 
+                    "detail": " SPED website scraped and processed successfully.", 
                     "results": results,
                     "inserted_record_id": inserted_id
                     })
