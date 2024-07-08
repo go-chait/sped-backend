@@ -1,8 +1,9 @@
+from bson import ObjectId
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from utils.auth import create_access_token, create_refresh_token, verify_password
 from db.mongodb import Users
-from models.auth import Login
+from models.auth import Login, User
 from fastapi_versioning import version
 
 router = APIRouter()
@@ -47,3 +48,22 @@ async def login(request: Login):
             status_code=code,
             content={"error": f"{message}"},
         )
+    
+#This method is used to get the user data by passing user_id
+async def get_user_by_user_id(user_id: str):
+    try:
+        user = Users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            return User(**user)
+    except Exception as error:
+        code = (
+            error.status_code
+            if hasattr(error, "status_code")
+            else status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+        message = error.content if hasattr(error, "content") else str(error)
+
+        return JSONResponse(
+            status_code=code,
+            content={"error": f"{message}"},
+        )        
