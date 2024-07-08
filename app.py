@@ -13,6 +13,12 @@ app = FastAPI()
 
 app = VersionedFastAPI(app, version_format="{major}", prefix_format="/v{major}")
 
+# List of allowed origins
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

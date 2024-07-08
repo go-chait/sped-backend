@@ -11,3 +11,11 @@ class Signup(BaseModel):
 class Login(BaseModel):
     email: EmailStr
     password: str
+
+
+class User(BaseModel):
+    _id:str
+    userName: str
+    email: str
+    password: str
+    role: str
