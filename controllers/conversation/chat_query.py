@@ -47,7 +47,7 @@ async def chat_query(request: Request, user_id: str = Depends(get_current_user_i
         
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"status": "success", "response": response['data']},
+            content={"status": "success", "response": response['data']['output']},
         )
     except Exception as error:
         return JSONResponse(
