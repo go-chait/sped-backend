@@ -5,13 +5,19 @@ from fastapi_versioning import VersionedFastAPI, version
 from routes.auth import auth_routers
 from routes.sessions import sessions_router
 from routes.users import users_router
+from routes.data import data_router
 from routes.conversation import chat_router
 from routes.scrape import scrape_router
-from routes.data import data_router
 
 app = FastAPI()
 
 app = VersionedFastAPI(app, version_format="{major}", prefix_format="/v{major}")
+
+# List of allowed origins
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +43,6 @@ app.include_router(users_router, prefix="/users", tags=["User"])
 app.include_router(sessions_router, prefix="/session", tags=["Session"])
 
 app.include_router(data_router, prefix="/data", tags=["Data"])
-
 
 app.include_router(chat_router, prefix="/chat-query", tags=["Chat"])
 

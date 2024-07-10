@@ -1,0 +1,13 @@
+models/__pycache__
+routes/__pycache__
+services/__pycache__
+controllers/auth/__pycache__
+controllers/data/__pycache__
+controllers/scrape/__pycache__
+db/__pycache__
+controllers/chat/__pycache__
+controllers/sessions/__pycache__
+controllers/users/__pycache__
+core/security/__pycache__
+utils/__pycache__
+controllers/conversation/__pycache__
